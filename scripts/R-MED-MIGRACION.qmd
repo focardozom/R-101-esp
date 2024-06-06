@@ -1,5 +1,5 @@
 ---
-title: "R para la programación en Bioestadística y Ciencia de Datos"
+title: "R para la programación en Bioestadística y Ciencia de Datos: `data frames`"
 subtitle: "R medicine 2024"
 format:
   html:
@@ -10,6 +10,7 @@ editor_options:
 author: 
   - "Fancisco Cardozo"
   - "Catalina Cañizares"
+  - "Mica"
 date: "2024-06-06"
 date-format: "long"
 self-contained: true
