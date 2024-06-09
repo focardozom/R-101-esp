@@ -10,7 +10,7 @@ editor_options:
 author: 
   - "Fancisco Cardozo"
   - "Catalina Cañizares"
-  - "Mica"
+  - "Micaela Lembo"
 date: "2024-06-06"
 date-format: "long"
 self-contained: true
@@ -32,11 +32,12 @@ Vamos a utilizar una base de datos en formato excel descargado de la página  [d
 :::{.map}
 ```{r}
 #| echo: false
+#| warning: false
 library(leaflet)
-leaflet(height=250) |> 
-  addTiles() |> 
-  setView(lng=-73.1198, lat=7.12539, zoom=4) |>
-  addMarkers(lng=-73.1198, lat=7.12539, popup="Bucaramanga")
+leaflet(height = 250) |>
+  addTiles() |>
+  setView(lng = -73.1198, lat = 7.12539, zoom = 4) |>
+  addMarkers(lng = -73.1198, lat = 7.12539, popup = "Bucaramanga")
 ```
 
 :::
@@ -53,6 +54,19 @@ Para responder esto, debemos cumplir varios pasos, como por ejemplo, limpiar y o
 
 Necesitamos crear un archivo con formato `.qmd` en la carpeta scripts. El nombre del archivo va a ser "atenciones_migrantes.qmd". El título del documento puede ser "Informe sobre atenciones a la población migrante en la ciudad de Bucaramanga."
 
+## Instalar los paquetes
+
+Debemos instalar los siguientes paquetes para utilizar sus funciones durante este taller. 
+
+```{r}
+#| eval: false
+install.packages("here") # Paquete para gestionar rutas de archivos
+install.packages("tidyverse") # Paquete principal para el análisis de datos
+install.packages("janitor") # Paquete para limpiar la base de datos
+install.packages("readxl") # Paquete para leer archivos excel
+```
+
+
 ## Cargar los paquetes
 
 Una de las ventajas de R es la disponibilidad de paquetes creados para hacer la vida de los investigadores más fácil. Un paquete es un conjunto de funciones y datos que se pueden instalar y cargar en R para realizar tareas específicas. En este caso, vamos a cargar los paquetes necesarios para el análisis de datos.
@@ -62,7 +76,7 @@ Para cargar un paquete en R, se utiliza la función `library()`. En este caso, v
 ```{r}
 #| messsages: false
 #| warning: false
-library(here)   # Paquete para gestionar rutas de archivos
+library(here) # Paquete para gestionar rutas de archivos
 library(tidyverse) # Paquete principal para el análisis de datos
 library(janitor) # Paquete para limpiar la base de datos
 library(readxl) # Paquete para leer archivos excel
@@ -72,14 +86,21 @@ library(readxl) # Paquete para leer archivos excel
 
 A continuación, vamos a importar los datos a R y los vamos a guardar en un objeto llamado `atenciones_migrantes`. Para hacer esto, vamos a utilizar la función `read_xlsx()` del paquete `readxl`.
 
+Para importar los datos y correr el código vamos a crear un chunk. Para crear el chunk con el teclado los usuarios de Mac presionan Option + Command + I, los usuarios de Windows Ctrl + Alt + I
+
+Para correr el código podemos presionar el triangulo verde en el chunk o podemos poner el cursor en cualquier lugar de la línea del código y los usuarios de Mac presionan  Command + enter, los usuarios de Windows Ctrl + enter
+
+No estamos familiarizados con la base de datos, por lo que vamos a explorarla un poco. Por ejemplo, podemos identificar cuántas columnas y filas tiene la base de datos, así como los nombres de las columnas.
+
+
 ```{r}
 atenciones_migrantes <- read_xlsx(here("data", "atenciones_migrantes.xlsx"))
 ```
 
-No estamos familiarizados con la base de datos, por lo que vamos a explorarla un poco. Por ejemplo, podemos identificar cuántas columnas y filas tiene la base de datos, así como los nombres de las columnas.
+
 
 ```{r}
-atenciones_migrantes 
+atenciones_migrantes
 ```
 
 Al haber utilizado `read_xlsx()`, la base de datos se ha guardado en un objeto de tipo `tibble`, que es una estructura de datos similar a un `data.frame` pero con algunas mejoras. Por ejemplo, los `tibbles` no convierten el texto en factores y muestran las dimensiones del objeto de manera más accesible. En nuesetro caso, la base de datos contiene 234824 filas, que corresponden a las atenciones prestadas a la población migrante, y 11 columnas, que corresponden a las variables capturadas por los prestadores de servicios.
@@ -87,16 +108,19 @@ Al haber utilizado `read_xlsx()`, la base de datos se ha guardado en un objeto d
 Si quieremos ver los nombres de las columnas, podemos hacerlo de la siguiente manera:
 
 ```{r}
-atenciones_migrantes |> 
+atenciones_migrantes |>
   names()
 ```
+
+Esto `|>` o `%>%` es llamado pipe y debe leerse como y después. 
+Para crearlo Mac users: Cmd + Shift + M Windows users: Ctrl + Shift + M.
 
 Aunque los nombres son claros, hay algunos problemas. Por ejemplo, los nombres de las columnas contienen espacios y caracteres especiales, lo que puede generar algunos problemas. Además, no se utilizaron de manera consistente las minúsculas y mayúsculas. Es importnate tener un forma de nombrar las variables. Hay diferentes formatos, para más información puede consultar aquí: [naming conventions](https://en.wikipedia.org/wiki/Naming_convention_(programming)#:~:text=The%20choice%20of%20a%20variable,d%2C%20and%20e%20for%20characters.).
 
 Vamos a limpiar los nombres de las columnas utilizando la función `clean_names()` del paquete `janitor`.
 
 ```{r}
-atenciones_migrantes <- atenciones_migrantes |> 
+atenciones_migrantes <- atenciones_migrantes |>
   clean_names()
 
 atenciones_migrantes |> names()
@@ -108,16 +132,15 @@ Utilizaremos la función `select()` para seleccionar las columnas de interes. En
 
 ```{r}
 atenciones_migrantes |> # El nombre de los datos
-  select(ano)  |>  # Seleccionamos la columna de interes
+  select(ano) |> # Seleccionamos la columna de interes
   count(ano) # Contamos cuantas atenciones se prestaron en cada año
 ```
 
 Observamos que la base de datos contiene atenciones desde los años 2014 hasta el 2022. Sin embargo, solo vamos a concentrarnos en los años 2017 a 2021. Para seleccionar las atenciones prestadas en estos años, podemos utilizar la función `filter()`.
 
 ```{r}
-
-atenciones_migrantes |> 
-  select(ano)  |> 
+atenciones_migrantes |>
+  select(ano) |>
   filter(ano >= 2017 & ano <= 2021) |>
   count(ano)
 ```
@@ -125,11 +148,11 @@ atenciones_migrantes |>
 Ahora que tenemos las atenciones prestadas en los años de interés, podemos calcular el porcentaje para cada año. Para hacer esto, vamos a utilizar la función `mutate()` para crear una nueva columna llamada `porcentaje` que contenga el porcentaje de atenciones en cada año.
 
 ```{r}
-atenciones_migrantes |> 
-  select(ano)  |> 
+atenciones_migrantes |>
+  select(ano) |>
   filter(ano >= 2017 & ano <= 2021) |>
-  count(ano) |> 
-  mutate(porcentaje = n/sum(n)*100)
+  count(ano) |>
+  mutate(porcentaje = n / sum(n) * 100)
 ```
 
 ::: {.panel-tabset}
@@ -147,19 +170,19 @@ Para obtener el porcentaje solo para los años 2017, 2019 y 2021, podemos utiliz
 Una vez construida la tabla de porcentajes, podemos visualizarla en un gráfico. Vamos a utilizar la función `ggplot()` del paquete `ggplot2` para crear un gráfico de lineas que muestre el porcentaje de atenciones prestadas en cada año.
 
 ```{r}
-
-atenciones_migrantes |> 
-  select(ano)  |> 
+atenciones_migrantes |>
+  select(ano) |>
   filter(ano >= 2017 & ano <= 2021) |>
-  count(ano) |> 
-  mutate(porcentaje = n/sum(n)*100) |> 
+  count(ano) |>
+  mutate(porcentaje = n / sum(n) * 100) |>
   ggplot(aes(x = ano, y = porcentaje, group = 1)) +
   geom_line() +
   geom_point() +
-  labs(title = "Porcentaje de atenciones prestadas a población migrante en Bucaramanga",
-       x = "Año",
-       y = "Porcentaje de atenciones")
-
+  labs(
+    title = "Porcentaje de atenciones prestadas a población migrante en Bucaramanga",
+    x = "Año",
+    y = "Porcentaje de atenciones"
+  )
 ```
 
 `ggplot2()` es una de las herramientas más atractivas de R debido a su flexibilidad y capacidad para crear gráficos de alta calidad. En este caso, hemos utilizado `ggplot()` para crear un gráfico de líneas que muestra el porcentaje de atenciones prestadas a la población migrante en Bucaramanga entre los años 2017 y 2021. Hemos utilizado `geom_line()` para trazar la línea y `geom_point()` para agregar los puntos al gráfico. También, hemos utilizado `labs()` para agregar títulos a los ejes y al gráfico.
@@ -167,7 +190,7 @@ atenciones_migrantes |>
 ::: {.panel-tabset}
 
 ## Reto 1
-Cambie el color de las líneas y los puntos en el gráfico.
+Cambie el color de las líneas y de los puntos en el gráfico.
 
 ## Solución 1
 
@@ -186,13 +209,11 @@ Al final del gráfico agregue el símbolo `+` seguido de  `theme_minimal()`. Ten
 Se observa un incremento de las atenciones a traves del tiempo. Sin embargo, sería más interesante saber si este incremento es similar para hombres y mujeres. Para hacer esto, vamos a utilizar nuevamente la función `count()` pero esta vez vamos a especificar dos variables para contar el número de atenciones. Además, vamos a calcular el porcentaje de atenciones para grupo. Para esto, vamos a agregar la opción `.by` a la función `mutate`.
 
 ```{r}
-
-atenciones_migrantes |> 
-  select(ano, sexo)  |> 
+atenciones_migrantes |>
+  select(ano, sexo) |>
   filter(ano >= 2017 & ano <= 2021) |>
-  count(ano, sexo) |> 
-  mutate(porcentaje = n/sum(n)*100, .by = sexo)
-
+  count(ano, sexo) |>
+  mutate(porcentaje = n / sum(n) * 100, .by = sexo)
 ```
 
 Hemos utilizado `count()` con dos variables, `ano` y `sexo`, para contar el número de atenciones prestadas a hombres y mujeres en cada año. Hemos utilizado `mutate()` para calcular el porcentaje de atenciones prestadas a hombres y mujeres en cada año. La opción `.by` le ha indicado a mutate que haga el proceso de suma para cada grupo de manera separada, de tal manera que el porcentaje de atenciónes sumará 100% para hombres y para mujeres. 
@@ -200,21 +221,21 @@ Hemos utilizado `count()` con dos variables, `ano` y `sexo`, para contar el núm
 Ahora, vamos a visualizar estos resultados en un gráfico de lineas utilizando `ggplot2`.
 
 ```{r}
-
-atenciones_migrantes |> 
-  select(ano, sexo)  |> 
+atenciones_migrantes |>
+  select(ano, sexo) |>
   filter(ano >= 2017 & ano <= 2021) |>
-  count(ano, sexo) |> 
-  mutate(porcentaje = n/sum(n)*100, .by=sexo) |> 
+  count(ano, sexo) |>
+  mutate(porcentaje = n / sum(n) * 100, .by = sexo) |>
   ggplot(aes(x = ano, y = porcentaje, group = sexo, color = sexo)) +
   geom_line() +
   geom_point() +
-  labs(title = "Porcentaje de atenciones prestadas a población migrante en Bucaramanga",
-       x = "Año",
-       y = "Porcentaje de atenciones",
-       color = "Sexo") +
+  labs(
+    title = "Porcentaje de atenciones prestadas a población migrante en Bucaramanga",
+    x = "Año",
+    y = "Porcentaje de atenciones",
+    color = "Sexo"
+  ) +
   scale_color_manual(values = c("blue", "red"))
-
 ```
 
 En este caso, hemos utilizado `ggplot()` para crear un gráfico de líneas que muestra el porcentaje de atenciones prestadas a la población migrante en Bucaramanga en los años 2017 a 2021, desglosado por sexo. Hemos utilizado el argumento `color` al interior de la funcion `aes()`, lo que nos ha permitido separar las líneas en dos grupos. La función `scale_color_manual()` nos permitió cambiar los colores de las líneas y los puntos en el gráfico.
@@ -241,89 +262,93 @@ Para cambiar el tamaño de los puntos puede utilizar el argumento `size` al inte
 Ahora, vamos a explorar un poco más la base de datos. Exploremos la variable `tipo_de_servicio`. Para hacer esto, vamos a contar cuántas atenciones se han prestado en cada tipo de servicio.
 
 ```{r}
-
-atenciones_migrantes |> 
+atenciones_migrantes |>
   count(tipo_de_servicio)
-
 ```
 
 La información no esta muy bien organizada en esta variable. Tenemos valores repetidos, como "CONSULTA" y "Consulta", que deberían ser considerados como el mismo valor. Para solucionar esto, vamos a convertir todos los valores de la variable `tipo_de_servicio` a minúsculas utilizando la función `str_to_sentence()` la cual nos permite mantener en mayuscula la primera letra y en minúscula el resto. Luego, vamos a contar cuántas atenciones se han prestado en cada tipo de servicio.
 
 ```{r}
-
-atenciones_migrantes |> 
-  mutate(tipo_de_servicio = str_to_sentence(tipo_de_servicio)) |> 
+atenciones_migrantes |>
+  mutate(tipo_de_servicio = str_to_sentence(tipo_de_servicio)) |>
   count(tipo_de_servicio)
-
 ```
 
 Hemos arreglado la opcion consulta, pero aun hay valores repetidos. Por ejemplo, "Vacunas" y "vacunacion" deberían ser considerados como el mismo valor. Para esto, vamos a utilizar la funcion `case_when()` que nos permite reemplazar valores de una columna de acuerdo a una condición. En este caso, vamos a reemplazar "Vacunas" por "Vacunacion". También podemos reemplazar "Quirurgico" por "Proc Quirurgico".
 
 ```{r}
-
-atenciones_migrantes |> 
-  mutate(tipo_de_servicio = str_to_sentence(tipo_de_servicio)) |> 
-  mutate(tipo_de_servicio = 
-           case_when(
-             tipo_de_servicio == "vacunas" ~ "vacunacion", 
-              tipo_de_servicio == "quirurgico" ~ "proc quirurgico",
-             .default = tipo_de_servicio)) |> 
+atenciones_migrantes |>
+  mutate(tipo_de_servicio = str_to_sentence(tipo_de_servicio)) |>
+  mutate(
+    tipo_de_servicio =
+      case_when(
+        tipo_de_servicio == "vacunas" ~ "vacunacion",
+        tipo_de_servicio == "quirurgico" ~ "proc quirurgico",
+        .default = tipo_de_servicio
+      )
+  ) |>
   count(tipo_de_servicio)
-
 ```
 
 Hay varios tipos de servicios que tienen una frecuencia muy baja y podríamos agrupar en una categoría llamada "Otros". Para hacer esto, vamos a utilizar nuevamente la función `case_when()` para reemplazar los valores de la variable `tipo_de_servicio` de acuerdo a una condición.
 
 ```{r}
-
-atenciones_migrantes |> 
-  mutate(tipo_de_servicio = str_to_sentence(tipo_de_servicio)) |> 
-  mutate(tipo_de_servicio = 
-           case_when(
-             tipo_de_servicio == "Vacunas" ~ "Vacunacion", 
-              tipo_de_servicio == "Quirurgico" ~ "Proc quirurgico",
-              tipo_de_servicio %in% c("Derecho de sala", "Estancia", "Honorario", 
-              "Imagenologia",
-              "Interconsulta", 
-              "Otro procedimiento") ~ "Otros",
-             .default = tipo_de_servicio)) |> 
+atenciones_migrantes |>
+  mutate(tipo_de_servicio = str_to_sentence(tipo_de_servicio)) |>
+  mutate(
+    tipo_de_servicio =
+      case_when(
+        tipo_de_servicio == "Vacunas" ~ "Vacunacion",
+        tipo_de_servicio == "Quirurgico" ~ "Proc quirurgico",
+        tipo_de_servicio %in% c(
+          "Derecho de sala", "Estancia", "Honorario",
+          "Imagenologia",
+          "Interconsulta",
+          "Otro procedimiento"
+        ) ~ "Otros",
+        .default = tipo_de_servicio
+      )
+  ) |>
   count(tipo_de_servicio)
-
-
 ```
 
 Ahora que hemos arreglado las  categorías para los servicios prestados, podemos calcular el porcentaje de atenciones prestadas en cada categoria por año. Vamos a guardar esta informacion en un objeto llamado `atenciones_por_servicio`. También vamos a filtrar la información de los años 2017 a 2021 y vamos a calcular los porcentajes para cada año. 
 
 ```{r}
-
-atenciones_por_servicio  <- atenciones_migrantes |> 
-  mutate(tipo_de_servicio = str_to_sentence(tipo_de_servicio)) |> 
-  mutate(tipo_de_servicio = 
-           case_when(
-             tipo_de_servicio == "Vacunas" ~ "Vacunacion", 
-              tipo_de_servicio == "Quirurgico" ~ "Proc quirurgico",
-              tipo_de_servicio %in% c("Derecho de sala", "Estancia", "Honorario", 
-              "Imagenologia",
-              "Interconsulta", 
-              "Otro procedimiento") ~ "Otros",
-             .default = tipo_de_servicio)) |> 
+atenciones_por_servicio <- atenciones_migrantes |>
+  mutate(tipo_de_servicio = str_to_sentence(tipo_de_servicio)) |>
+  mutate(
+    tipo_de_servicio =
+      case_when(
+        tipo_de_servicio == "Vacunas" ~ "Vacunacion",
+        tipo_de_servicio == "Quirurgico" ~ "Proc quirurgico",
+        tipo_de_servicio %in% c(
+          "Derecho de sala", "Estancia", "Honorario",
+          "Imagenologia",
+          "Interconsulta",
+          "Otro procedimiento"
+        ) ~ "Otros",
+        .default = tipo_de_servicio
+      )
+  ) |>
   filter(ano >= 2017 & ano <= 2021) |>
-  count(ano, tipo_de_servicio)  |> 
-  mutate(porcentaje = n/sum(n)*100, .by = ano)
-
+  count(ano, tipo_de_servicio) |>
+  mutate(porcentaje = n / sum(n) * 100, .by = ano)
 ```
 
 Ahora podemos hacer un gráfico que muestre estos resultados.
 
 ```{r}
-atenciones_por_servicio  |> 
+atenciones_por_servicio |>
   ggplot(aes(x = ano, y = porcentaje, group = tipo_de_servicio, color = tipo_de_servicio)) +
   geom_line() +
   geom_point() +
-  labs(title = "Atenciones prestadas a población migrante en Bucaramanga por tipo de servicio",
-       x = "Año",
-       y = "Número de atenciones",
-       color = "Tipo de servicio") 
+  labs(
+    title = "Atenciones prestadas a población migrante en Bucaramanga por tipo de servicio",
+    x = "Año",
+    y = "Número de atenciones",
+    color = "Tipo de servicio"
+  )
 ```
 
 Se observan algunos cambios en la tendencia de algunos servicios. Por ejemplo, una disminución en el uso de laboratorio u un aumento en los procedimientos. Los demás servicios parecen más estables. 
@@ -379,26 +404,29 @@ Utilizaremos el paquete `tidymodels` el cual es especializado para el modelamien
 #| warning: false
 library(tidymodels)
 library(gtsummary)
-
 ```
 
 Vamos a tomar nuevamente nuestro código para crear una base de datos con las variables de interés. En este caso, vamos a seleccionar las variables `sexo` y `tipo_de_servicio`. Además, vamos a filtrar la información de los años 2017 a 2021 y a hacer los ajustes necesarios en la variable `tipo_de_servicio`. También vamos a tomar una muestra aleatoria de 5000 observaciones para el análisis, para que sea más rápido.
 
 ```{r}
-
-datos_modelo  <- atenciones_migrantes |> 
-  mutate(tipo_de_servicio = str_to_sentence(tipo_de_servicio)) |> 
+datos_modelo <- atenciones_migrantes |>
+  mutate(tipo_de_servicio = str_to_sentence(tipo_de_servicio)) |>
   filter(ano >= 2017 & ano <= 2021) |>
-  mutate(tipo_de_servicio = 
-           case_when(
-             tipo_de_servicio == "Vacunas" ~ "Vacunacion", 
-              tipo_de_servicio == "Quirurgico" ~ "Proc quirurgico",
-              tipo_de_servicio %in% c("Derecho de sala", "Estancia", "Honorario", 
-              "Imagenologia",
-              "Interconsulta", 
-              "Otro procedimiento") ~ "Otros",
-             .default = tipo_de_servicio)) |> 
-  mutate(sexo = factor(sexo))  |> 
+  mutate(
+    tipo_de_servicio =
+      case_when(
+        tipo_de_servicio == "Vacunas" ~ "Vacunacion",
+        tipo_de_servicio == "Quirurgico" ~ "Proc quirurgico",
+        tipo_de_servicio %in% c(
+          "Derecho de sala", "Estancia", "Honorario",
+          "Imagenologia",
+          "Interconsulta",
+          "Otro procedimiento"
+        ) ~ "Otros",
+        .default = tipo_de_servicio
+      )
+  ) |>
+  mutate(sexo = factor(sexo)) |>
   sample_n(5000)
 ```
 
@@ -407,9 +435,8 @@ Ahora, vamos a especificar el modelo de regresión logística. En este caso, vam
 ```{r}
 #| warning: false
 
-modelo_estimado <- logistic_reg() |> 
+modelo_estimado <- logistic_reg() |>
   fit(sexo ~ tipo_de_servicio, data = datos_modelo)
-
 ```
 
 Una vez estimado el modelo, podemos ordenar los resultados utilizando la función `tbl_regression()`. Esta función nos permite presentar los resultados de manera más amigable. En este caso, vamos a especificar que queremos los coeficientes exponenciados, lo que nos permitirá interpretar los resultados en términos de razones de odds (odds ratio).
@@ -417,16 +444,14 @@ Una vez estimado el modelo, podemos ordenar los resultados utilizando la funció
 ```{r}
 #| warning: false
 
-tbl_regression(modelo_estimado, exponentiate =TRUE)
-
+tbl_regression(modelo_estimado, exponentiate = TRUE)
 ```
 
 Finalmente, podemos hacer una tabla con el conteo de casos por variables, para tener una idea de la distribución de los datos y el significado de los coeficientes del modelo estimado anteriormente. 
 
 ```{r}
-datos_modelo |> 
-tbl_cross(tipo_de_servicio, sexo, percent = "col") 
-
+datos_modelo |>
+  tbl_cross(tipo_de_servicio, sexo, percent = "col")
 ```
 
 Muchas gracias por la atención y el esfuerzo que han hecho para seguir este taller. Esperamos que haya sido de su agrado y que haya aprendido algo nuevo. Si tiene alguna pregunta o comentario, estamos atentos.
@@ -435,6 +460,3 @@ Muchas gracias por la atención y el esfuerzo que han hecho para seguir este tal
 ::: {.retro-text}
 *** Gracias ***
 :::
-
-
-

@@ -89,6 +89,11 @@ class(mi_factor_ordenado)
 mi_factor_ordenado
 ```
 
+### En resumen
+
+![](../img/types_of_variables.drawio.svg)
+
+
 ## Tipos de objetos en R
 
 ### 1. Vectores
